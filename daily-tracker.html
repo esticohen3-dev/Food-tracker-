@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>מעקב יומי</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Nayax Brand Applied — v2 */
+  :root {
+    --yellow: #FFCD00;
+    --dark: #262626;
+    --white: #FFFFFF;
+    --light-bg: #F3F3F3;
+    --yellow-tint: #FFFAE6;
+    --secondary: #868686;
+    --border: #DDDDDD;
+    --carb: #F59E0B;
+    --protein: #3B82F6;
+    --fat: #10B981;
+    --carb-light: #FEF3C7;
+    --protein-light: #DBEAFE;
+    --fat-light: #D1FAE5;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', 'Nunito Sans', sans-serif;
+    background: var(--light-bg);
+    min-height: 100vh;
+    padding: 20px 16px 40px;
+    color: var(--dark);
+    direction: rtl;
+  }
+
+  .header {
+    background: var(--dark);
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .header-title { color: var(--white); font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+  .header-date { color: var(--secondary); font-size: 13px; margin-top: 4px; }
+  .reset-btn {
+    background: transparent; border: 1px solid #444; color: var(--secondary);
+    font-family: 'DM Sans', sans-serif; font-size: 12px; padding: 6px 14px;
+    border-radius: 20px; cursor: pointer; transition: all 0.2s;
+  }
+  .reset-btn:hover { border-color: var(--yellow); color: var(--yellow); }
+
+  /* Summary */
+  .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+  .summary-card {
+    background: var(--white); border-radius: 14px; padding: 16px 14px;
+    text-align: center; box-shadow: 0 2px 12px rgba(38,38,38,0.06);
+    position: relative; overflow: hidden;
+  }
+  .summary-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; }
+  .card-carb::before { background: var(--carb); }
+  .card-protein::before { background: var(--protein); }
+  .card-fat::before { background: var(--fat); }
+  .card-label { font-size: 11px; color: var(--secondary); font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 8px; }
+  .card-count { font-size: 36px; font-weight: 700; line-height: 1; letter-spacing: -0.03em; }
+  .card-carb .card-count { color: var(--carb); }
+  .card-protein .card-count { color: var(--protein); }
+  .card-fat .card-count { color: var(--fat); }
+  .card-unit { font-size: 11px; color: var(--secondary); margin-top: 4px; }
+  .progress-bar { height: 4px; background: var(--light-bg); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 2px; transition: width 0.4s ease; }
+  .card-carb .progress-fill { background: var(--carb); }
+  .card-protein .progress-fill { background: var(--protein); }
+  .card-fat .progress-fill { background: var(--fat); }
+  .card-target { font-size: 11px; color: var(--secondary); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+  .card-target span { font-weight: 700; color: var(--dark); }
+
+  /* Target bar */
+  .target-bar { background: var(--yellow-tint); border: 1px solid var(--yellow); border-radius: 12px; padding: 14px 16px; margin-bottom: 20px; }
+  .target-bar-title { font-size: 12px; font-weight: 700; color: var(--dark); margin-bottom: 10px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .target-inputs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .target-field label { display: block; font-size: 11px; color: var(--secondary); margin-bottom: 4px; font-weight: 600; }
+  .target-field input {
+    font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 700; width: 100%;
+    border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px;
+    text-align: center; background: var(--white); color: var(--dark);
+  }
+  .target-field input:focus { outline: none; border-color: var(--yellow); }
+
+  /* Meals */
+  .section-title { font-size: 13px; font-weight: 700; color: var(--secondary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
+  .meals-container { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .meal-card { background: var(--white); border-radius: 14px; overflow: hidden; box-shadow: 0 2px 12px rgba(38,38,38,0.06); }
+  .meal-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; cursor: pointer; user-select: none; }
+  .meal-name { font-size: 15px; font-weight: 600; }
+  .meal-badges { display: flex; gap: 6px; align-items: center; }
+  .badge { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px; }
+  .badge-carb { background: var(--carb-light); color: var(--carb); }
+  .badge-protein { background: var(--protein-light); color: var(--protein); }
+  .badge-fat { background: var(--fat-light); color: var(--fat); }
+  .meal-toggle { font-size: 18px; color: var(--secondary); transition: transform 0.2s; }
+  .meal-card.open .meal-toggle { transform: rotate(180deg); }
+  .meal-body { display: none; padding: 0 16px 16px; border-top: 1px solid var(--border); }
+  .meal-card.open .meal-body { display: block; }
+
+  /* Log list */
+  .log-list { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+  .log-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-radius: 8px; background: var(--light-bg); font-size: 13px; }
+  .log-item-name { color: var(--dark); font-weight: 500; flex: 1; }
+  .log-item-badges { display: flex; gap: 4px; }
+  .log-delete { background: none; border: none; cursor: pointer; color: var(--secondary); font-size: 15px; padding: 0 0 0 8px; line-height: 1; transition: color 0.15s; }
+  .log-delete:hover { color: #EF4444; }
+  .empty-state { text-align: center; color: var(--secondary); font-size: 13px; padding: 8px 0; font-style: italic; }
+
+  /* ---- NEW ADD FORM ---- */
+  .add-form {
+    margin-top: 14px;
+    background: var(--light-bg);
+    border-radius: 12px;
+    padding: 12px;
+  }
+
+  .add-form-input {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 13px;
+    width: 100%;
+    background: var(--white);
+    color: var(--dark);
+    direction: rtl;
+    margin-bottom: 10px;
+  }
+  .add-form-input:focus { outline: none; border-color: var(--yellow); }
+
+  .portion-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .portion-label {
+    font-size: 13px;
+    font-weight: 600;
+    width: 60px;
+  }
+  .portion-label.lbl-carb { color: var(--carb); }
+  .portion-label.lbl-protein { color: var(--protein); }
+  .portion-label.lbl-fat { color: var(--fat); }
+
+  .counter {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1.5px solid var(--border);
+    background: var(--white);
+  }
+
+  .counter-btn {
+    background: var(--white);
+    border: none;
+    font-size: 18px;
+    font-weight: 300;
+    width: 36px;
+    height: 34px;
+    cursor: pointer;
+    color: var(--dark);
+    transition: background 0.15s;
+    line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .counter-btn:hover { background: var(--light-bg); }
+  .counter-btn:active { background: var(--border); }
+
+  .counter-val {
+    font-size: 15px;
+    font-weight: 700;
+    min-width: 32px;
+    text-align: center;
+    color: var(--dark);
+    border-left: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    height: 34px;
+    line-height: 34px;
+  }
+
+  .half-toggle {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: var(--white);
+    color: var(--secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .half-toggle.active-half { background: var(--carb-light); border-color: var(--carb); color: var(--carb); }
+
+  .add-submit-btn {
+    width: 100%;
+    margin-top: 10px;
+    background: var(--dark);
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .add-submit-btn:hover { background: #3a3a3a; }
+  .add-submit-btn:active { background: var(--yellow); color: var(--dark); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">מעקב מנות יומי 🥗</div>
+    <div class="header-date" id="today-date"></div>
+  </div>
+  <button class="reset-btn" onclick="resetDay()">איפוס יום</button>
+</div>
+
+<!-- Targets -->
+<div class="target-bar">
+  <div class="target-bar-title">🎯 יעדים יומיים</div>
+  <div class="target-inputs">
+    <div class="target-field">
+      <label>פחמימה</label>
+      <input type="number" id="target-carb" value="5" min="1" max="30" step="0.5" oninput="saveAndRender()">
+    </div>
+    <div class="target-field">
+      <label>חלבון</label>
+      <input type="number" id="target-protein" value="3.5" min="1" max="30" step="0.5" oninput="saveAndRender()">
+    </div>
+    <div class="target-field">
+      <label>שומן</label>
+      <input type="number" id="target-fat" value="2" min="1" max="20" step="0.5" oninput="saveAndRender()">
+    </div>
+  </div>
+</div>
+
+<!-- Summary -->
+<div class="summary-grid">
+  <div class="summary-card card-carb">
+    <div class="card-label">פחמימה</div>
+    <div class="card-count" id="total-carb">0</div>
+    <div class="card-unit">נותרו</div>
+    <div class="progress-bar"><div class="progress-fill" id="bar-carb" style="width:0%"></div></div>
+    <div class="card-target">יעד: <span id="display-target-carb">5</span></div>
+  </div>
+  <div class="summary-card card-protein">
+    <div class="card-label">חלבון</div>
+    <div class="card-count" id="total-protein">0</div>
+    <div class="card-unit">נותרו</div>
+    <div class="progress-bar"><div class="progress-fill" id="bar-protein" style="width:0%"></div></div>
+    <div class="card-target">יעד: <span id="display-target-protein">3.5</span></div>
+  </div>
+  <div class="summary-card card-fat">
+    <div class="card-label">שומן</div>
+    <div class="card-count" id="total-fat">0</div>
+    <div class="card-unit">נותרו</div>
+    <div class="progress-bar"><div class="progress-fill" id="bar-fat" style="width:0%"></div></div>
+    <div class="card-target">יעד: <span id="display-target-fat">2</span></div>
+  </div>
+</div>
+
+<!-- Meals -->
+<div class="section-title">ארוחות</div>
+<div class="meals-container" id="meals-container"></div>
+
+<script>
+const MEAL_NAMES = ['☀️ בוקר', '🌤️ ביניים 1', '🌞 צהריים', '🌥️ ביניים 2', '🌙 ערב'];
+const MEAL_KEYS = ['breakfast', 'snack1', 'lunch', 'snack2', 'dinner'];
+
+// per-meal pending form state (not saved to localStorage)
+const formState = {};
+MEAL_KEYS.forEach(k => { formState[k] = { carb: 0, protein: 0, fat: 0, halfCarb: false, halfProtein: false, halfFat: false }; });
+
+let state = loadState();
+
+function loadState() {
+  const today = getToday();
+  const saved = localStorage.getItem('nutrition_tracker');
+  if (saved) {
+    const parsed = JSON.parse(saved);
+    if (parsed.date === today) return parsed;
+  }
+  return {
+    date: today,
+    targets: { carb: 5, protein: 3.5, fat: 2 },
+    meals: { breakfast: [], snack1: [], lunch: [], snack2: [], dinner: [] }
+  };
+}
+
+function getToday() {
+  return new Date().toLocaleDateString('he-IL', { year:'numeric', month:'2-digit', day:'2-digit' });
+}
+
+function saveState() {
+  state.targets = {
+    carb: parseFloat(document.getElementById('target-carb').value) || 5,
+    protein: parseFloat(document.getElementById('target-protein').value) || 3.5,
+    fat: parseFloat(document.getElementById('target-fat').value) || 2,
+  };
+  localStorage.setItem('nutrition_tracker', JSON.stringify(state));
+}
+
+function saveAndRender() { saveState(); renderSummary(); }
+
+function resetDay() {
+  MEAL_KEYS.forEach(k => {
+    state.meals[k] = [];
+    formState[k] = { carb: 0, protein: 0, fat: 0, halfCarb: false, halfProtein: false, halfFat: false };
+  });
+  saveState();
+  renderMeals();
+  renderSummary();
+}
+
+function changeCounter(mealKey, type, delta) {
+  const f = formState[mealKey];
+  f[type] = Math.max(0, (f[type] || 0) + delta);
+  document.getElementById(`cnt-${mealKey}-${type}`).textContent = f[type];
+}
+
+function toggleHalf(mealKey, type) {
+  const key = 'half' + type.charAt(0).toUpperCase() + type.slice(1);
+  formState[mealKey][key] = !formState[mealKey][key];
+  const btn = document.getElementById(`half-${mealKey}-${type}`);
+  btn.classList.toggle('active-half', formState[mealKey][key]);
+}
+
+function submitItem(mealKey) {
+  const input = document.getElementById(`input-${mealKey}`);
+  const name = input.value.trim();
+  if (!name) { input.focus(); return; }
+
+  const f = formState[mealKey];
+  const totalCarb = f.carb + (f.halfCarb ? 0.5 : 0);
+  const totalProtein = f.protein + (f.halfProtein ? 0.5 : 0);
+  const totalFat = f.fat + (f.halfFat ? 0.5 : 0);
+
+  if (totalCarb === 0 && totalProtein === 0 && totalFat === 0) {
+    input.focus();
+    alert('סמני לפחות מנה אחת (פחמימה, חלבון, או שומן)');
+    return;
+  }
+
+  const item = {
+    id: Date.now(),
+    name,
+    carb: totalCarb,
+    protein: totalProtein,
+    fat: totalFat
+  };
+
+  state.meals[mealKey].push(item);
+
+  // reset form state for this meal
+  formState[mealKey] = { carb: 0, protein: 0, fat: 0, halfCarb: false };
+  input.value = '';
+
+  saveState();
+  renderMeals();
+  renderSummary();
+
+  // re-open this meal
+  setTimeout(() => {
+    const cards = document.querySelectorAll('.meal-card');
+    const idx = MEAL_KEYS.indexOf(mealKey);
+    if (cards[idx]) cards[idx].classList.add('open');
+    const inp = document.getElementById(`input-${mealKey}`);
+    if (inp) inp.focus();
+  }, 0);
+}
+
+function deleteItem(mealKey, itemId) {
+  state.meals[mealKey] = state.meals[mealKey].filter(i => i.id !== itemId);
+  saveState();
+  renderMeals();
+  renderSummary();
+}
+
+function getPortionCounts() {
+  let carb = 0, protein = 0, fat = 0;
+  MEAL_KEYS.forEach(k => {
+    state.meals[k].forEach(item => {
+      carb += (item.carb || 0);
+      protein += (item.protein || 0);
+      fat += (item.fat || 0);
+    });
+  });
+  return { carb, protein, fat };
+}
+
+function fmt(n) { return n % 1 === 0 ? n : n.toFixed(1); }
+
+function renderSummary() {
+  const { carb, protein, fat } = getPortionCounts();
+  const tc = parseFloat(document.getElementById('target-carb').value) || 5;
+  const tp = parseFloat(document.getElementById('target-protein').value) || 3.5;
+  const tf = parseFloat(document.getElementById('target-fat').value) || 2;
+
+  const remCarb = Math.max(0, tc - carb);
+  const remProtein = Math.max(0, tp - protein);
+  const remFat = Math.max(0, tf - fat);
+  document.getElementById('total-carb').textContent = fmt(remCarb);
+  document.getElementById('total-protein').textContent = fmt(remProtein);
+  document.getElementById('total-fat').textContent = fmt(remFat);
+  document.getElementById('display-target-carb').textContent = tc;
+  document.getElementById('display-target-protein').textContent = tp;
+  document.getElementById('display-target-fat').textContent = tf;
+
+  document.getElementById('bar-carb').style.width = Math.min(100, (carb/tc)*100) + '%';
+  document.getElementById('bar-protein').style.width = Math.min(100, (protein/tp)*100) + '%';
+  document.getElementById('bar-fat').style.width = Math.min(100, (fat/tf)*100) + '%';
+}
+
+function renderMeals() {
+  const container = document.getElementById('meals-container');
+
+  // preserve open state
+  const openSet = new Set();
+  document.querySelectorAll('.meal-card').forEach((el, i) => {
+    if (el.classList.contains('open')) openSet.add(MEAL_KEYS[i]);
+  });
+
+  container.innerHTML = '';
+
+  MEAL_KEYS.forEach((key, idx) => {
+    const items = state.meals[key];
+    let mealCarb = 0, mealProtein = 0, mealFat = 0;
+    items.forEach(item => {
+      mealCarb += (item.carb || 0);
+      mealProtein += (item.protein || 0);
+      mealFat += (item.fat || 0);
+    });
+
+    const f = formState[key];
+    const isOpen = openSet.has(key) || (openSet.size === 0 && idx < 2);
+
+    const card = document.createElement('div');
+    card.className = 'meal-card' + (isOpen ? ' open' : '');
+
+    card.innerHTML = `
+      <div class="meal-header" onclick="this.parentElement.classList.toggle('open')">
+        <span class="meal-name">${MEAL_NAMES[idx]}</span>
+        <div class="meal-badges">
+          ${mealCarb > 0 ? `<span class="badge badge-carb">פ×${fmt(mealCarb)}</span>` : ''}
+          ${mealProtein > 0 ? `<span class="badge badge-protein">ח×${fmt(mealProtein)}</span>` : ''}
+          ${mealFat > 0 ? `<span class="badge badge-fat">ש×${fmt(mealFat)}</span>` : ''}
+          <span class="meal-toggle">▾</span>
+        </div>
+      </div>
+      <div class="meal-body">
+        <div class="log-list">
+          ${items.length === 0 ? '<div class="empty-state">עדיין לא נרשמו מנות</div>' : ''}
+          ${items.map(item => `
+            <div class="log-item">
+              <span class="log-item-name">${item.name}</span>
+              <div class="log-item-badges">
+                ${item.carb > 0 ? `<span class="badge badge-carb">פ×${fmt(item.carb)}</span>` : ''}
+                ${item.protein > 0 ? `<span class="badge badge-protein">ח×${fmt(item.protein)}</span>` : ''}
+                ${item.fat > 0 ? `<span class="badge badge-fat">ש×${fmt(item.fat)}</span>` : ''}
+              </div>
+              <button class="log-delete" onclick="deleteItem('${key}', ${item.id})">✕</button>
+            </div>
+          `).join('')}
+        </div>
+
+        <!-- ADD FORM — stays open, never toggled -->
+        <div class="add-form">
+          <input
+            class="add-form-input"
+            id="input-${key}"
+            type="text"
+            placeholder="שם המאכל..."
+            onkeydown="if(event.key==='Enter') submitItem('${key}')"
+          >
+
+          <!-- Carb counter -->
+          <div class="portion-row">
+            <span class="portion-label lbl-carb">🟡 פחמימה</span>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <div class="counter">
+                <button class="counter-btn" onclick="changeCounter('${key}','carb',-1)">−</button>
+                <span class="counter-val" id="cnt-${key}-carb">${f.carb}</span>
+                <button class="counter-btn" onclick="changeCounter('${key}','carb',1)">+</button>
+              </div>
+              <button class="half-toggle ${f.halfCarb ? 'active-half' : ''}" id="half-${key}-carb" onclick="toggleHalf('${key}','carb')">½</button>
+            </div>
+          </div>
+
+          <!-- Protein counter -->
+          <div class="portion-row">
+            <span class="portion-label lbl-protein">🔵 חלבון</span>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <div class="counter">
+                <button class="counter-btn" onclick="changeCounter('${key}','protein',-1)">−</button>
+                <span class="counter-val" id="cnt-${key}-protein">${f.protein}</span>
+                <button class="counter-btn" onclick="changeCounter('${key}','protein',1)">+</button>
+              </div>
+              <button class="half-toggle ${f.halfProtein ? 'active-half' : ''}" id="half-${key}-protein" onclick="toggleHalf('${key}','protein')">½</button>
+            </div>
+          </div>
+
+          <!-- Fat counter -->
+          <div class="portion-row">
+            <span class="portion-label lbl-fat">🟢 שומן</span>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <div class="counter">
+                <button class="counter-btn" onclick="changeCounter('${key}','fat',-1)">−</button>
+                <span class="counter-val" id="cnt-${key}-fat">${f.fat}</span>
+                <button class="counter-btn" onclick="changeCounter('${key}','fat',1)">+</button>
+              </div>
+              <button class="half-toggle ${f.halfFat ? 'active-half' : ''}" id="half-${key}-fat" onclick="toggleHalf('${key}','fat')">½</button>
+            </div>
+          </div>
+
+          <button class="add-submit-btn" onclick="submitItem('${key}')">+ הוסיפי</button>
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+// Init
+document.getElementById('today-date').textContent = new Date().toLocaleDateString('he-IL', {
+  weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+});
+
+if (state.targets) {
+  document.getElementById('target-carb').value = state.targets.carb;
+  document.getElementById('target-protein').value = state.targets.protein;
+  document.getElementById('target-fat').value = state.targets.fat;
+}
+
+renderMeals();
+renderSummary();
+</script>
+</body>
+</html>
